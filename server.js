@@ -27,10 +27,30 @@ app.get('/', (request, response) => {
     response.json(stocks)
 });
 
+app.get('/stocks/:symbol', (request, response) => {
+    const symbolToFind = request.params.symbol.toUpperCase();
+    const matches = stocks.filter( obj => symbolToFind === obj.symbol);
+    if (matches) 
+        response.json(matches);
+    else
+        response.write("No stock found for " + symbolToFind);
+})
+
+app.get('/stocks/name/:substring', (request, response) => {
+    const substringToFind = request.params.substring.toLowerCase();
+    const matches = stocks.filter( obj => obj.name.toLowerCase().includes(substring));
+
+    if (matches)
+        response.json(matches);
+    else
+        response.write("No names found with " + substringToFind);
+});
+
+
 const port = 8080;
 app.listen(port, () => {
-    console.log("Server running at port=" + port);
-})
+    console.log("Server running at port=" + port + " on " + Date().toLocaleString());
+});
 
 //remove http server since now redundant by express app
 
