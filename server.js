@@ -2,25 +2,27 @@
 
 //required node js modules
 //const http = require('http'); //http server replaced by express
-const fs = require('fs'); //file system
-const path = require('path'); //directory structure
+//NOW IN LOADDATA const fs = require('fs'); //file system
+//NOW IN LOADDATA const path = require('path'); //directory structure
+const loadData = require('./control/loadData.js');
+
 const express = require('express'); //api routes
 
 //run instance
 const app = express();
 
 //load data
-const dataPath = path.join(__dirname, 'data', 'companies-data.json');
+//LOADDATA const dataPath = path.join(__dirname, 'data', 'companies-data.json');
 
 //store stocks in var 
-let stocks;
-fs.readFile(dataPath, (err, data) =>
-{
-    if (err)
-        console.log('Unable to read stocks file');
-    else
-        stocks = JSON.parse(data);
-})
+//LOADDATA let stocks;
+//LOADDATA fs.readFile(dataPath, (err, data) =>
+//LOADDATA {
+//LOADDATA     if (err)
+//LOADDATA         console.log('Unable to read stocks file');
+//LOADDATA     else
+//LOADDATA         stocks = JSON.parse(data);
+//LOADDATA })
 
 //replace basic server with express app
 app.get('/', (request, response) => {
