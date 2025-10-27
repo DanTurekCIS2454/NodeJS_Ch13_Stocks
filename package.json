@@ -1,0 +1,30 @@
+{
+  "name": "nodejs_ch13_stocks",
+  "version": "1.0.0",
+  "description": "Stocks API and EJS pages from book Ch13",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DanTurekCIS2454/NodeJS_Ch13_Stocks.git"
+  },
+  "keywords": [
+    "stocks",
+    "node",
+    "api",
+    "ejs"
+  ],
+  "author": "Daniel Turek",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DanTurekCIS2454/NodeJS_Ch13_Stocks/issues"
+  },
+  "homepage": "https://github.com/DanTurekCIS2454/NodeJS_Ch13_Stocks#readme",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
