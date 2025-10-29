@@ -35,9 +35,10 @@ async function loadAndGetStocks() {
     catch (err) {
         console.error('Unable to read stocks file:', dataPath);
         // Re-throw the error so consumers of this function know it failed
+        console.log('Error: ' + err.message);
         throw new Error('Data loading failed: ' + err.message); 
     }
-    console.log('Loaded and Got Stocks!');
+    console.log('Loaded and Got Stocks!'); //impossible to get here
 }
 
 // 4. Export the async function that handles loading and returning the data

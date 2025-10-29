@@ -13,3 +13,4 @@ Class: CIS2454 OCC
 
 ###Log
 2025/10/27  Readme started
+2025/10/29  Previously created loadData.js by moving the load portion of server.js code to control and be a module, but finally got it to work today using Gemini AI.

@@ -4,13 +4,47 @@
 //const http = require('http'); //http server replaced by express
 //NOW IN LOADDATA const fs = require('fs'); //file system
 //NOW IN LOADDATA const path = require('path'); //directory structure
-const loadData = require('./control/loadData.js');
-let stocks = loadData;
+//const loadData = require('./control/loadData.js');
+//let stocks = loadData;
 
 const express = require('express'); //api routes
 
 //run instance
 const app = express();
+
+
+//Gemini AI to get the data
+// main.js (or wherever you are using loadData)
+
+let stocks = null;
+const { getData } = require('./control/loadData'); // Import the function
+
+// Use an async IIFE to create an awaitable context
+(async () => {
+    try {
+        console.log('Attempting to load data...'); // This message appears first
+        
+        // --- THIS IS THE KEY CHANGE ---
+        // 1. We call the function.
+        // 2. We use 'await' to pause execution until the Promise resolves.
+        stocks = await getData(); 
+        
+        // Once the await resolves, the console.log from loadData.js runs, 
+        // THEN these messages run.
+        console.log('\n✅ Successfully received data!');
+        console.log('Total items loaded:', stocks.length);
+        
+        // Now you can safely use the data:
+        // console.log(stockData[0]); 
+
+    } catch (error) {
+        console.error('\n❌ Failed to get stock data in main module:', error.message);
+    }
+})();
+
+console.log('Program continues to run...'); // This runs *before* the data loading finishes!
+
+//end Gemini AI
 
 //load data
 //LOADDATA const dataPath = path.join(__dirname, 'data', 'companies-data.json');
