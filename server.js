@@ -5,6 +5,7 @@
 //NOW IN LOADDATA const fs = require('fs'); //file system
 //NOW IN LOADDATA const path = require('path'); //directory structure
 const loadData = require('./control/loadData.js');
+let stocks = loadData;
 
 const express = require('express'); //api routes
 

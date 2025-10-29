@@ -1,32 +1,56 @@
 //loadData.js for modular approach
 
-const fs = require('fs'); //file system
-const path = require('path'); //directory structure
+/* Gemini AI version after trying to fix for a while */
+// loadData.js (Revised)
+console.log('Running loadData.js');
 
-//load data
-//const dataPath = path.join(__dirname, 'data', 'companies-data.json');
-//have in same directory so don't need path? why won't it open though?
-//moved this program to /control and updated path, still won't open file
+const fs = require('fs/promises'); // 1. Use the Promise-based API
+const path = require('path');
+
+// Determine the correct path
 const dataPath = path.join(__dirname, '../data', 'companies-data.json');
 
-//store stocks in var 
-let stocks;
-getStocks(dataPath);
+// 2. Define the data variable inside the scope or make the function return the data
+let stocksCache = null; // Use a cache variable
 
-async function getStocks(dataPath) {
+/**
+ * Loads data from the file, parses it, and caches the result.
+ * @returns {Promise<Object>} The parsed stock data.
+ */
+async function loadAndGetStocks() {
+    console.log('Loading ...');
+    // Return cached data if already loaded
+    if (stocksCache) {
+        console.log('Return cached stocks');
+        return stocksCache;
+    }
+
     try {
-        const data = await fs.readFile(dataPath, "utf-8");
-        stocks = JSON.parse(data);
+        // 3. The Promise API call is now correct (no callback needed)
+        const data = await fs.readFile(dataPath, { encoding: "utf-8" }); 
+        stocksCache = JSON.parse(data);
         console.log('Stock data loaded');
+        return stocksCache;
     }
     catch (err) {
-        console.log('Unable to read stocks file: ' + dataPath + '\n' + 'Error mesage: ' + err.message);
+        console.error('Unable to read stocks file:', dataPath);
+        // Re-throw the error so consumers of this function know it failed
+        throw new Error('Data loading failed: ' + err.message); 
     }
+    console.log('Loaded and Got Stocks!');
 }
 
-function getData() {
-    return stocks;
-}
+// 4. Export the async function that handles loading and returning the data
+module.exports = { 
+    getData: loadAndGetStocks 
+};
 
-module.exports = { getData };
-
+// Example of how a consumer would use it:
+// (async () => {
+//     try {
+//         const data = await require('./loadData').getData();
+//         console.log(data.length);
+//     } catch (e) {
+//         console.error('App failed to start:', e);
+//     }
+// })();
