@@ -38,9 +38,31 @@ const port = 8080;
         app.use('/stocks', stockRoutes); 
 
         // Basic route for the home page 
-        app.get('/', (req, res) => {
-            res.send(`Server is running on port ${port}. API endpoints are modularized.`);
+        //app.get('/', (req, res) => {
+        //    res.send(`Server is running on port ${port}. API endpoints are modularized.`);
+        //});
+
+        console.log("Setting ejs pages");
+        // 1. Configure EJS as the templating engine
+        app.set('view engine', 'ejs');
+        // Specify the directory where EJS template files are located
+        app.set('views', path.join(__dirname, 'views'));
+
+        // 2. Middleware to parse incoming JSON request bodies (essential for POST/PUT)
+        app.use(express.json());
+        // Middleware to parse URL-encoded bodies (if forms are used)
+        app.use(express.urlencoded({ extended: true }));
+
+        // --- Routes ---
+
+        // 3. MVC View Route (List View): Renders the initial web page
+        // GET /
+        app.get('/', (request, response) => {
+            // Pass data and title to the EJS template ('views/companies.ejs')
+            response.render('stock-grid', { stocks 
+            });
         });
+
 
         // 4. Start the server only after everything is configured
         app.listen(port, () => {

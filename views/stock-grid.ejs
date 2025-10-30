@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Data View (MVC)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        table { width: 80%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Stock Information</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Company Name</th>
+                <th>SEC</th>
+                <th>Sector</th>
+                <th>Sub Industry</th>
+                <th>Address</th>
+                <th>Date Added</th>
+                <th>CIK</th>
+                <th>Frequency</th>
+                <th>API Endpoint</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% stocks.forEach(function(stock) { %>
+                <tr>
+                    <td><%= stock.symbol %></td>
+                    <td><%= stock.name %></td>
+                    <td><%= stock.SEC %></td>
+                    <td><%= stock.sector %></td>
+                    <td><%= stock.subIndustry %></td>
+                    <td><%= stock.address %></td>
+                    <td><%= stock.dateAdded %></td>
+                    <td><%= stock.CIK %></td>
+                    <td><%= stock.frequency %></td>
+                    <td><a href="/api/stocks/<%= stock.symbol %>">/api/stocks/<%= stock.symbol %></a></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <p style="margin-top: 30px;">
+        Raw JSON API Endpoint: 
+        <a href="/api/stocks">/api/stocks</a>
+    </p>
+
+</body>
+</html>
