@@ -1,93 +1,60 @@
 //server.js
 
-//required node js modules
-//const http = require('http'); //http server replaced by express
-//NOW IN LOADDATA const fs = require('fs'); //file system
-//NOW IN LOADDATA const path = require('path'); //directory structure
-//const loadData = require('./control/loadData.js');
-//let stocks = loadData;
+// server.js (Revised)
 
-const express = require('express'); //api routes
+console.log("Server attempt to start at " + Date().toLocaleString());
 
-//run instance
-const app = express();
-
-
-//Gemini AI to get the data
-// main.js (or wherever you are using loadData)
+const fs = require('fs').promises;
+const path = require('path');
+const express = require('express');
 
 let stocks = null;
-const { getData } = require('./control/loadData'); // Import the function
+const { getData } = require('./control/loadData');
+const getStockRoutes = require('./control/endpoints'); // Import the router function
 
-// Use an async IIFE to create an awaitable context
+const app = express();
+const port = 8080;
+
+// Use an async IIFE to load data and then START the server
 (async () => {
     try {
-        console.log('Attempting to load data...'); // This message appears first
+        console.log('Attempting to load data...');
         
-        // --- THIS IS THE KEY CHANGE ---
-        // 1. We call the function.
-        // 2. We use 'await' to pause execution until the Promise resolves.
+        // 1. AWAIT the data loading
         stocks = await getData(); 
         
-        // Once the await resolves, the console.log from loadData.js runs, 
-        // THEN these messages run.
         console.log('\n✅ Successfully received data!');
         console.log('Total items loaded:', stocks.length);
         
-        // Now you can safely use the data:
-        // console.log(stockData[0]); 
+        // --- START EXPRESS SETUP AFTER DATA IS LOADED ---
+        
+        // 2. Initialize routes with the loaded 'stocks' data
+        const stockRoutes = getStockRoutes(stocks);
+
+        // --- Static File Serving ---
+        app.use("/static", express.static(path.join(__dirname, "public")));
+
+        // 3. Apply the routes
+        app.use('/stocks', stockRoutes); 
+
+        // Basic route for the home page 
+        app.get('/', (req, res) => {
+            res.send(`Server is running on port ${port}. API endpoints are modularized.`);
+        });
+
+        // 4. Start the server only after everything is configured
+        app.listen(port, () => {
+            console.log(`Server listening at http://localhost:${port}`);
+            console.log(`Static assets served from: http://localhost:${port}/static/`);
+            console.log(`Stock API served from the modular router at: http://localhost:${port}/stocks`);
+        });
 
     } catch (error) {
-        console.error('\n❌ Failed to get stock data in main module:', error.message);
+        // Log the error and exit the process if data loading failed
+        console.error('\n❌ Fatal: Failed to start server due to data loading error.');
+        console.error('Error:', error.message);
+        process.exit(1); 
     }
 })();
 
-console.log('Program continues to run...'); // This runs *before* the data loading finishes!
-
-//end Gemini AI
-
-//load data
-//LOADDATA const dataPath = path.join(__dirname, 'data', 'companies-data.json');
-
-//store stocks in var 
-//LOADDATA let stocks;
-//LOADDATA fs.readFile(dataPath, (err, data) =>
-//LOADDATA {
-//LOADDATA     if (err)
-//LOADDATA         console.log('Unable to read stocks file');
-//LOADDATA     else
-//LOADDATA         stocks = JSON.parse(data);
-//LOADDATA })
-
-//replace basic server with express app
-app.get('/', (request, response) => {
-    response.json(stocks)
-});
-
-app.get('/stocks/:symbol', (request, response) => {
-    const symbolToFind = request.params.symbol.toUpperCase();
-    const matches = stocks.filter( obj => symbolToFind === obj.symbol);
-    if (matches) 
-        response.json(matches);
-    else
-        response.write("No stock found for " + symbolToFind);
-})
-
-app.get('/stocks/name/:substring', (request, response) => {
-    const substringToFind = request.params.substring.toLowerCase();
-    const matches = stocks.filter( obj => obj.name.toLowerCase().includes(substring));
-
-    if (matches)
-        response.json(matches);
-    else
-        response.write("No names found with " + substringToFind);
-});
-
-
-const port = 8080;
-app.listen(port, () => {
-    console.log("Server running at port=" + port + " on " + Date().toLocaleString());
-});
-
-//remove http server since now redundant by express app
-
+// Note: The original Express imports and setup are now moved inside the IIFE.

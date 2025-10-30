@@ -4,6 +4,7 @@
 // loadData.js (Revised)
 console.log('Running loadData.js');
 
+//path needed in server.js
 const fs = require('fs/promises'); // 1. Use the Promise-based API
 const path = require('path');
 
