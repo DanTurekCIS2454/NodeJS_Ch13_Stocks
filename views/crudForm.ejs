@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock CRUD Form</title>
+    <style>
+        /* Custom styles for the form layout */
+        .container { max-width: 600px; }
+        input:read-only { background-color: #f3f4f6; cursor: not-allowed; }
+        /* Modal backdrop and z-index ensures it's on top */
+        .modal-backdrop {
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            z-index: 1010;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans p-4 sm:p-8">
+
+    <div class="container mx-auto p-6 bg-white shadow-xl rounded-xl border border-gray-200">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">Company Data Manager</h1>
+        <p class="text-sm text-gray-500 mb-8">Use this form for all CRUD operations. For **Update** or **Delete**, enter the **ID** of the record you wish to modify first.</p>
+        
+        <!-- Status/Response Message Box -->
+        <div id="message" class="hidden p-3 mb-4 rounded-lg font-medium" role="alert"></div>
+
+        <form id="crudForm" class="space-y-6">
+
+            <!-- ID Field (Used for Update and Delete) -->
+            <div class="flex flex-col">
+                <label for="id" class="text-sm font-medium text-gray-700 mb-1">ID (Auto-Assigned for Create)</label>
+                <input type="number" id="id" name="id" placeholder="Enter ID to Update/Delete" 
+                       class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150" 
+                       aria-describedby="id-help">
+                <small id="id-help" class="text-xs text-gray-500 mt-1">Leave blank for **Create**.</small>
+            </div>
+
+            <!-- Stock Symbol Field (Required) -->
+            <div class="flex flex-col">
+                <label for="StockSymbol" class="text-sm font-medium text-gray-700 mb-1">Stock Symbol (e.g., AAPL)</label>
+                <input type="text" id="StockSymbol" name="StockSymbol" required placeholder="Required, e.g., GOOG" 
+                       class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 uppercase">
+            </div>
+
+            <!-- Company Name Field -->
+            <div class="flex flex-col">
+                <label for="Name" class="text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                <input type="text" id="Name" name="Name" required placeholder="Required, e.g., Alphabet Inc." 
+                       class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150">
+            </div>
+
+            <!-- Last Price Field -->
+            <div class="flex flex-col">
+                <label for="LastPrice" class="text-sm font-medium text-gray-700 mb-1">Last Price ($)</label>
+                <input type="number" step="0.01" id="LastPrice" name="LastPrice" required placeholder="Required, e.g., 1500.25" 
+                       class="p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-4 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <button type="button" id="createBtn" 
+                        class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200 shadow-md">
+                    CREATE (POST)
+                </button>
+                <button type="button" id="updateBtn" 
+                        class="flex-1 bg-secondary text-white py-3 rounded-lg font-semibold hover:bg-emerald-600 transition duration-200 shadow-md">
+                    UPDATE (PUT)
+                </button>
+                <button type="button" id="deleteBtn" 
+                        class="flex-1 bg-delete text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition duration-200 shadow-md">
+                    DELETE (DELETE)
+                </button>
+            </div>
+            
+            <a href="/" class="block text-center mt-6 text-sm text-primary hover:text-indigo-700 transition duration-200">
+                ← Go back to List View
+            </a>
+        </form>
+
+    </div>
+
+    <!-- CUSTOM CONFIRMATION MODAL (Hidden by default) -->
+    <div id="deleteModal" class="hidden fixed inset-0 flex items-center justify-center modal-backdrop transition-opacity duration-300">
+        <div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-sm transform transition-transform duration-300 scale-95">
+            <h3 class="text-xl font-bold text-red-600 mb-4 border-b pb-2">Confirm Deletion</h3>
+            <!-- Placeholder for dynamic message -->
+            <p class="text-gray-700 mb-6" id="modalMessage">
+                Are you sure you want to permanently delete this company record? This action cannot be undone.
+            </p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelDeleteBtn" type="button" 
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition duration-150">
+                    Cancel
+                </button>
+                <button id="confirmDeleteBtn" type="button" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition duration-150">
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- END CUSTOM CONFIRMATION MODAL -->
+
+    <script>
+        // Get references to all necessary DOM elements
+        const form = document.getElementById('crudForm');
+        const idInput = document.getElementById('id');
+        const messageBox = document.getElementById('message');
+        const createBtn = document.getElementById('createBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        
+        // Modal elements
+        const deleteModal = document.getElementById('deleteModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+
+
+        /**
+         * Utility function to display API response messages to the user.
+         * @param {string} text - The message to display.
+         * @param {string} type - 'success', 'error', or 'info' for styling.
+         */
+        const displayMessage = (text, type = 'info') => {
+            // Define styles based on message type
+            let baseClasses = "p-3 mb-4 rounded-lg font-medium transition-all duration-300";
+            let colorClasses;
+
+            switch (type) {
+                case 'success':
+                    colorClasses = "bg-green-100 text-green-700 border border-green-300";
+                    break;
+                case 'error':
+                    colorClasses = "bg-red-100 text-red-700 border border-red-300";
+                    break;
+                case 'info':
+                default:
+                    colorClasses = "bg-blue-100 text-blue-700 border border-blue-300";
+                    break;
+            }
+
+            // Set content and classes
+            messageBox.className = baseClasses + " " + colorClasses;
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden');
+
+            // Hide the message after 5 seconds
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        };
+
+        /**
+         * Handles all button clicks, builds the request, and performs the fetch call.
+         * @param {string} method - HTTP method (POST, PUT, DELETE).
+         */
+        const handleSubmission = async (method) => {
+            // 1. Get current values from the form inputs
+            const data = {
+                StockSymbol: form.StockSymbol.value.trim(),
+                Name: form.Name.value.trim(),
+                LastPrice: parseFloat(form.LastPrice.value.trim()),
+            };
+            const id = idInput.value.trim();
+            let url = '/api/companies';
+            
+            // 2. Client-side validation for non-DELETE methods
+            if (method !== 'DELETE' && (!data.StockSymbol || !data.Name || isNaN(data.LastPrice))) {
+                displayMessage("Please fill out all required fields (Symbol, Name, Price).", 'error');
+                return;
+            }
+
+            // 3. Determine URL and validate ID based on the method
+            if (method === 'PUT' || method === 'DELETE') {
+                if (!id) {
+                    displayMessage(`An ID is required for ${method} operation.`, 'error');
+                    return;
+                }
+                url = `/api/companies/${id}`;
+            } else if (method === 'POST' && id) {
+                 // Prevent accidental creation if ID is set
+                 displayMessage('ID must be left blank for CREATE operation.', 'error');
+                 return;
+            }
+
+            // 4. Set up fetch request options
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                // DELETE requests do not typically send a body
+                body: (method === 'POST' || method === 'PUT') ? JSON.stringify(data) : null
+            };
+
+            // 5. Execute the fetch request to the API
+            try {
+                const response = await fetch(url, options);
+
+                if (response.ok) {
+                    // Success handling
+                    if (method === 'DELETE') {
+                        displayMessage(`Company with ID ${id} successfully deleted!`, 'success');
+                        form.reset(); // Clear form on successful deletion
+                    } else if (method === 'POST') {
+                        const result = await response.json();
+                        displayMessage(`Company ${result.StockSymbol} created with ID ${result.id}!`, 'success');
+                        // Pre-populate ID field with new ID for potential quick update
+                        idInput.value = result.id;
+                    } else if (method === 'PUT') {
+                        const result = await response.json();
+                        displayMessage(`Company with ID ${id} successfully updated!`, 'success');
+                    }
+                } else {
+                    // Error handling
+                    const errorData = await response.json();
+                    displayMessage(`Error (${response.status} ${response.statusText}): ${errorData.message || 'An unknown error occurred.'}`, 'error');
+                }
+            } catch (error) {
+                // Network or general fetch error
+                displayMessage(`Network Error: ${error.message}`, 'error');
+            }
+        };
+
+        // --- Event Listeners ---
+
+        createBtn.addEventListener('click', () => handleSubmission('POST'));
+        updateBtn.addEventListener('click', () => handleSubmission('PUT'));
+        
+        // DELETE: Shows the custom confirmation modal
+        deleteBtn.addEventListener('click', () => {
+            const id = idInput.value.trim();
+            if (!id) {
+                displayMessage("Please enter the ID of the company you wish to delete.", 'error');
+                return;
+            }
+
+            // Update modal message and display modal
+            modalMessage.innerHTML = `Are you sure you want to permanently delete the record for company ID: <span class="font-bold text-red-700">${id}</span>? This action cannot be undone.`;
+            deleteModal.classList.remove('hidden');
+        });
+        
+        // Modal Confirmation: Calls the delete submission function
+        confirmDeleteBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            handleSubmission('DELETE');
+        });
+
+        // Modal Cancellation: Hides the modal
+        cancelDeleteBtn.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            displayMessage("Deletion cancelled.", 'info');
+        });
+        
+    </script>
+</body>
+</html>

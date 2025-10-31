@@ -63,6 +63,12 @@ const port = 8080;
             });
         });
 
+        // GET /manage
+        app.get('/manage', (req, res) => {
+            // Renders the new crudForm.ejs page
+            res.render('crudForm', stocks);
+        });
+
 
         // 4. Start the server only after everything is configured
         app.listen(port, () => {
